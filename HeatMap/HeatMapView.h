@@ -27,5 +27,5 @@
 #import "HeatMap.h"
 
 @interface HeatMapView : MKOverlayView
-
+- (void)setHeatRadiusInPoints:(CGFloat)radius;
 @end

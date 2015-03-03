@@ -27,7 +27,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 
 // This sets the spread of the heat from each map point (in screen pts.)
-static const NSInteger kSBHeatRadiusInPoints = 48;
+static NSInteger kSBHeatRadiusInPoints = 48;
 
 // These affect the transparency of the heatmap
 // Colder areas will be more transparent
@@ -52,12 +52,17 @@ static const CGFloat kSBMaxAlpha = 0.85;
 @implementation HeatMapView
 
 @synthesize scaleMatrix = _scaleMatrix;
-
+- (void)setHeatRadiusInPoints:(CGFloat)radius{
+    kSBHeatRadiusInPoints = radius > 0 ? radius : 10;
+    [self populateScaleMatrix];
+    [self setNeedsDisplay];
+}
 - (id)initWithOverlay:(id <MKOverlay>)overlay
 {
     if (self = [super initWithOverlay:overlay]) {
         _scaleMatrix = malloc(2 * kSBHeatRadiusInPoints * 2 * kSBHeatRadiusInPoints * sizeof(float));
         [self populateScaleMatrix];
+        [self setBackgroundColor:[UIColor colorWithRed:0.000 green:1.000 blue:1.000 alpha:0.310]];
     }
     return self;
 }
@@ -119,7 +124,7 @@ static const CGFloat kSBMaxAlpha = 0.85;
           inContext:(CGContextRef)context
 {    
     CGRect usRect = [self rectForMapRect:mapRect]; //rect in user space coordinates (NOTE: not in screen points)
-    
+    CGRect contextRect = CGContextGetClipBoundingBox(context);
     int columns = ceil(CGRectGetWidth(usRect) * zoomScale);
     int rows = ceil(CGRectGetHeight(usRect) * zoomScale);
     int arrayLen = columns * rows;
@@ -192,6 +197,11 @@ static const CGFloat kSBMaxAlpha = 0.85;
         
         free(pointValues);
     }
+    CGRect matchingUsRect = contextRect;//CGRectMake(0, 0, usRect.size.width, usRect.size.height);
+    //CGRectMake(usRect.origin.x + column / zoomScale,usRect.origin.y + row / zoomScale,1/zoomScale,1/zoomScale);
+    CGContextSetStrokeColorWithColor(context, [UIColor blackColor].CGColor);
+    CGContextStrokeRectWithWidth(context, matchingUsRect, 1/zoomScale);
+//    CGContextFillRect(context, matchingUsRect);
 }
 
 - (void)dealloc
